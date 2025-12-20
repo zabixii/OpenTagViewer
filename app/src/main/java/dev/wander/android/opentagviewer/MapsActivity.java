@@ -46,7 +46,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
@@ -981,17 +980,15 @@ public class MapsActivity extends AppCompatActivity implements IMapProvider.OnMa
         }
         Log.d(TAG, "Going to add new marker for beaconId=" + beaconId);
 
-        android.graphics.Bitmap iconBitmap = null;
+        // 创建自定义标记图标
+        android.graphics.Bitmap iconBitmap;
         if (beacon.isEmojiFilled()) {
-            // 对于抽象接口，我们需要将BitmapDescriptor转换为Bitmap
-            // 这里简化处理，直接使用默认图标
-            BitmapDescriptor icon = VectorImageGeneratorUtil.makeMarker(
+            iconBitmap = VectorImageGeneratorUtil.makeMarker(
                     getResources(),
                     beacon.getEmoji(),
                     getColor(R.color.md_theme_background));
-            // 注意：这里需要从BitmapDescriptor提取Bitmap，简化处理
         } else {
-            BitmapDescriptor icon = VectorImageGeneratorUtil.makeMarker(
+            iconBitmap = VectorImageGeneratorUtil.makeMarker(
                     getResources(),
                     R.drawable.apple,
                     getColor(R.color.md_theme_background),
@@ -1004,7 +1001,7 @@ public class MapsActivity extends AppCompatActivity implements IMapProvider.OnMa
                 .id(beaconId)
                 .latitude(lastLocation.getLatitude())
                 .longitude(lastLocation.getLongitude())
-                .useDefaultIcon(true)
+                .icon(iconBitmap)
                 .build();
         
         String markerId = this.mapProvider.addMarker(marker);
