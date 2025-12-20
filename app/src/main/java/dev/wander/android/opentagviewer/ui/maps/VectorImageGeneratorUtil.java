@@ -173,13 +173,17 @@ public final class VectorImageGeneratorUtil {
         var hardwareBuffer = Optional.ofNullable(image.getHardwareBuffer()).orElseThrow(() -> new RuntimeException("No HardwareBuffer"));
         var blurredBitmap = Optional.ofNullable(Bitmap.wrapHardwareBuffer(hardwareBuffer, null)).orElseThrow(() -> new RuntimeException("Create Bitmap failed"));
 
+        // 立即创建可变的 ARGB_8888 副本，避免 Hardware Bitmap 在跨线程使用时出现 BufferQueue 问题
+        Bitmap softwareBitmap = blurredBitmap.copy(Bitmap.Config.ARGB_8888, true);
+        
+        // 清理 Hardware 资源
         hardwareBuffer.close();
         image.close();
         imageReader.close();
         renderNode.discardDisplayList();
         hardwareRenderer.destroy();
 
-        return blurredBitmap.copy(Bitmap.Config.ARGB_8888,true);
+        return softwareBitmap;
     }
 
     /**
