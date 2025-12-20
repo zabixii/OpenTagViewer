@@ -77,7 +77,7 @@ androidx-emoji = { group = "androidx.emoji2", name = "emoji2", version.ref = "em
 androidx-emoji-views = { group = "androidx.emoji2", name = "emoji2-views", version.ref = "emojiPicker" }
 androidx-emoji-views-helper = { group = "androidx.emoji2", name = "emoji2-views-helper", version.ref = "emojiPicker" }
 androidx-emoji-picker = { group = "androidx.emoji2", name = "emoji2-emojipicker", version.ref = "emojiPicker" }
-amap-3dmap = { group = "com.amap.api", name = "3dmap", version.ref = "amapVersion" }
+amap-map3d = { group = "com.amap.api", name = "3dmap", version.ref = "amapVersion" }
 amap-location = { group = "com.amap.api", name = "location", version.ref = "amapLocationVersion" }
 
 [plugins]
