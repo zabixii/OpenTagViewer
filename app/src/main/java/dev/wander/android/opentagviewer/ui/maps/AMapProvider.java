@@ -80,16 +80,32 @@ public class AMapProvider implements IMapProvider {
             java.lang.reflect.Method getMapMethod = mapViewClass.getMethod("getMap");
             this.aMap = getMapMethod.invoke(mapView);
             
-            // 添加到容器
+            // 调用 onCreate 生命周期方法（高德地图必需）
+            // TextureMapView.onCreate(Bundle savedInstanceState)
+            java.lang.reflect.Method onCreateMethod = mapViewClass.getMethod("onCreate", android.os.Bundle.class);
+            onCreateMethod.invoke(mapView, (android.os.Bundle) null);
+            Log.d(TAG, "AMap TextureMapView onCreate() called");
+            
+            // 添加到容器，并设置 LayoutParams 确保 View 填充整个容器
             android.view.ViewGroup container = activity.findViewById(containerViewId);
             if (container != null) {
-                container.addView((View) mapView);
+                android.view.ViewGroup.LayoutParams layoutParams = new android.view.ViewGroup.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                );
+                container.addView((View) mapView, layoutParams);
+                Log.d(TAG, "AMap view added to container with MATCH_PARENT layout params");
+            } else {
+                Log.e(TAG, "Container view not found for id: " + containerViewId);
             }
             
             // 设置地图准备就绪回调
             if (this.callback != null) {
                 this.callback.onMapReady(this);
+                Log.d(TAG, "AMap onMapReady callback triggered");
             }
+            
+            Log.i(TAG, "AMap initialization completed successfully");
             
         } catch (Exception e) {
             Log.e(TAG, "Failed to initialize AMap", e);

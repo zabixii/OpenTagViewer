@@ -383,6 +383,16 @@ public class MapsActivity extends AppCompatActivity implements IMapProvider.OnMa
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        
+        // 调用高德地图的生命周期方法
+        if (this.mapProvider instanceof AMapProvider) {
+            ((AMapProvider) this.mapProvider).onDestroy();
+        }
+    }
+
     private void reSchedulePeriodicTagLocationRefresher() {
         // (re-)schedule tag location refresher
         if (this.nextLocationRefreshTask != null) {
