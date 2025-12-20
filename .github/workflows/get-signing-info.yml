@@ -1,114 +1,180 @@
-name: 获取签名信息 (Get Signing Info)
+name: Get Android package name & SHA1
 
 on:
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch:
+    inputs:
+      keystore_mode:
+        description: "Keystore mode: release (from secrets) or debug (ephemeral)"
+        required: false
+        default: "release"
+        type: choice
+        options:
+          - release
+          - debug
+
+permissions:
+  contents: read
 
 jobs:
-  get-signing-info:
-    name: 生成 SHA1 指纹和包名
+  signing-info:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: 检出代码
+      - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: 设置 JDK 17
+
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-      
-      - name: 赋予 Gradlew 执行权限
-        run: chmod +x gradlew
-      
-      - name: 生成 Debug Keystore
-        run: |
-          echo "======================================"
-          echo "正在生成 Debug Keystore..."
-          echo "======================================"
-          mkdir -p $HOME/.android
-          keytool -genkey -v -keystore $HOME/.android/debug.keystore \
-            -storepass android -alias androiddebugkey -keypass android \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
-          echo "✅ Debug Keystore 已生成"
-          echo ""
-      
-      - name: 生成签名报告
-        run: |
-          echo "======================================"
-          echo "正在生成签名报告..."
-          echo "======================================"
-          ./gradlew signingReport --no-daemon
-      
-      - name: 提取签名信息
-        run: |
-          echo ""
-          echo "======================================"
-          echo "Android 应用签名信息"
-          echo "======================================"
-          echo ""
-          
-          # 提取包名
-          PACKAGE_NAME=$(grep 'namespace = ' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
-          echo "📦 包名 (Package Name):"
-          echo "   $PACKAGE_NAME"
-          echo ""
-          
-          # 提取 Debug SHA1
-          echo "🔐 Debug SHA1 指纹:"
-          DEBUG_SHA1=$(keytool -list -v -keystore $HOME/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 2>/dev/null | grep "SHA1:" | sed 's/.*SHA1: //')
-          echo "   $DEBUG_SHA1"
-          echo ""
-          
-          # 提取 SHA256（备用）
-          echo "🔐 Debug SHA256 指纹:"
-          DEBUG_SHA256=$(keytool -list -v -keystore $HOME/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 2>/dev/null | grep "SHA256:" | sed 's/.*SHA256: //')
-          echo "   $DEBUG_SHA256"
-          echo ""
-          
-          echo "======================================"
-          
-          # 保存到文件
-          cat > signing-info.txt << 'SIGNING_INFO_END'
-====================================
-Android 应用签名信息
-====================================
-SIGNING_INFO_END
-          echo "" >> signing-info.txt
-          echo "包名 (Package Name):" >> signing-info.txt
-          echo "$PACKAGE_NAME" >> signing-info.txt
-          echo "" >> signing-info.txt
-          echo "Debug SHA1:" >> signing-info.txt
-          echo "$DEBUG_SHA1" >> signing-info.txt
-          echo "" >> signing-info.txt
-          echo "Debug SHA256:" >> signing-info.txt
-          echo "$DEBUG_SHA256" >> signing-info.txt
-          echo "" >> signing-info.txt
-          echo "====================================" >> signing-info.txt
-          
-          echo "✅ 签名信息已保存到 signing-info.txt"
-      
-      - name: 生成完整签名报告文件
-        run: |
-          ./gradlew signingReport --no-daemon > signing-report.txt 2>&1
-          echo "完整的签名报告已保存到 signing-report.txt"
-      
-      - name: 上传签名信息
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-signing-info
-          path: |
-            signing-info.txt
-            signing-report.txt
-          retention-days: 7
-      
-      - name: 完成
-        run: |
-          echo ""
-          echo "✅ 签名信息已生成"
-          echo ""
-          echo "可在页面顶部下载 Artifact: android-signing-info"
-          echo ""
+          distribution: temurin
+          java-version: "17"
 
+      - name: Detect applicationId / package name
+        id: pkg
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          import os, re, sys, pathlib
+
+          root = pathlib.Path(".")
+          gradle = root / "app" / "build.gradle.kts"
+          manifest = root / "app" / "src" / "main" / "AndroidManifest.xml"
+
+          app_id = None
+          namespace = None
+          manifest_pkg = None
+
+          if gradle.exists():
+            txt = gradle.read_text(encoding="utf-8", errors="ignore")
+            m = re.search(r'^\s*applicationId\s*=\s*"([^"]+)"\s*$', txt, flags=re.M)
+            if m:
+              app_id = m.group(1).strip()
+            m = re.search(r'^\s*namespace\s*=\s*"([^"]+)"\s*$', txt, flags=re.M)
+            if m:
+              namespace = m.group(1).strip()
+
+          if manifest.exists():
+            txt = manifest.read_text(encoding="utf-8", errors="ignore")
+            m = re.search(r'<manifest[^>]*\spackage\s*=\s*"([^"]+)"', txt, flags=re.I)
+            if m:
+              manifest_pkg = m.group(1).strip()
+
+          package_name = app_id or namespace or manifest_pkg
+          if not package_name:
+            print("ERROR: Cannot detect package name (applicationId/namespace/manifest package).", file=sys.stderr)
+            sys.exit(1)
+
+          # GitHub Actions output
+          out = os.environ.get("GITHUB_OUTPUT")
+          if out:
+            with open(out, "a", encoding="utf-8") as f:
+              f.write(f"package_name={package_name}\n")
+
+          print(f"package_name={package_name}")
+          PY
+
+      - name: Prepare keystore (release from secrets OR ephemeral debug)
+        id: ks
+        shell: bash
+        env:
+          INPUT_MODE: ${{ inputs.keystore_mode }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          MODE="${INPUT_MODE:-release}"
+          if [[ "$MODE" == "release" && -n "${ANDROID_KEYSTORE_BASE64:-}" ]]; then
+            echo "Using release keystore from secrets.ANDROID_KEYSTORE_BASE64"
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > keystore.jks
+            echo "keystore_path=keystore.jks" >> "$GITHUB_OUTPUT"
+            echo "keystore_kind=release" >> "$GITHUB_OUTPUT"
+          else
+            echo "Using ephemeral debug keystore (NOT suitable for production Google Maps restrictions)"
+            keytool -genkeypair \
+              -alias androiddebugkey \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US" \
+              -storepass android -keypass android \
+              -keystore debug.keystore \
+              -storetype JKS
+            echo "keystore_path=debug.keystore" >> "$GITHUB_OUTPUT"
+            echo "keystore_kind=debug" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute SHA1 fingerprint(s)
+        id: fp
+        shell: bash
+        env:
+          KEYSTORE_PATH: ${{ steps.ks.outputs.keystore_path }}
+          KEYSTORE_KIND: ${{ steps.ks.outputs.keystore_kind }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! -f "$KEYSTORE_PATH" ]]; then
+            echo "ERROR: keystore not found at $KEYSTORE_PATH" >&2
+            exit 1
+          fi
+
+          if [[ "$KEYSTORE_KIND" == "debug" ]]; then
+            STOREPASS="android"
+            ALIAS="androiddebugkey"
+          else
+            STOREPASS="${KEYSTORE_PASSWORD:-}"
+            ALIAS="${KEY_ALIAS:-}"
+          fi
+
+          if [[ -z "$STOREPASS" ]]; then
+            echo "ERROR: Missing keystore password. Set secrets.KEYSTORE_PASSWORD for release mode." >&2
+            exit 1
+          fi
+
+          echo "== keytool entries =="
+          keytool -list -v -keystore "$KEYSTORE_PATH" -storepass "$STOREPASS" || true
+
+          if [[ -n "$ALIAS" ]]; then
+            echo "== SHA1 for alias: $ALIAS =="
+            SHA1_LINE="$(keytool -list -v -keystore "$KEYSTORE_PATH" -storepass "$STOREPASS" -alias "$ALIAS" | sed -n 's/^[[:space:]]*SHA1:[[:space:]]*//p' | head -n 1 || true)"
+            if [[ -z "${SHA1_LINE:-}" ]]; then
+              echo "ERROR: Could not extract SHA1 for alias=$ALIAS (check secrets.KEY_ALIAS / password)." >&2
+              exit 1
+            fi
+            echo "sha1=$SHA1_LINE" >> "$GITHUB_OUTPUT"
+            echo "SHA1=$SHA1_LINE"
+          else
+            echo "== SHA1 (all aliases) =="
+            # Extract all SHA1 lines; may include multiple entries
+            SHA1_ALL="$(keytool -list -v -keystore "$KEYSTORE_PATH" -storepass "$STOREPASS" | sed -n 's/^[[:space:]]*SHA1:[[:space:]]*//p' | tr '\n' ';' | sed 's/;*$//' || true)"
+            if [[ -z "${SHA1_ALL:-}" ]]; then
+              echo "ERROR: Could not extract any SHA1 from keystore (check password)." >&2
+              exit 1
+            fi
+            echo "sha1=$SHA1_ALL" >> "$GITHUB_OUTPUT"
+            echo "SHA1=$SHA1_ALL"
+          fi
+
+      - name: Summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "## Google Maps Android 限制信息"
+            echo ""
+            echo "- 包名（package name / applicationId）：\`${{ steps.pkg.outputs.package_name }}\`"
+            echo "- SHA1 指纹：\`${{ steps.fp.outputs.sha1 }}\`"
+            echo ""
+            echo "### 说明"
+            echo "- 如果你要生成可用于生产环境的 SHA1，请在仓库 Secrets 配置："
+            echo "  - ANDROID_KEYSTORE_BASE64：keystore 文件 base64（建议不要带换行）"
+            echo "  - KEYSTORE_PASSWORD：keystore 密码"
+            echo "  - KEY_ALIAS：证书别名（可选；不填则输出所有条目的 SHA1）"
+            echo "  - KEY_PASSWORD：key 密码（此工作流计算 SHA1 通常不需要；可留空）"
+            echo "- 如果没配置 ANDROID_KEYSTORE_BASE64 或选择 debug 模式，会生成一次性 debug keystore，SHA1 仅适合临时测试。"
+          } >> "$GITHUB_STEP_SUMMARY"
