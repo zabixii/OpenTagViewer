@@ -296,6 +296,19 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void onClickEditAnisetteServerUrl() {
+        // FindMy 0.9.x embeds the anisette URL inside the saved account JSON and
+        // refuses to swap providers post-login. Block changes while a session
+        // exists; the user can sign out below to change provider.
+        var existingAuth = this.authRepository.getUserAuth().blockingFirst();
+        if (existingAuth.isPresent()) {
+            Toast.makeText(
+                    this,
+                    R.string.anisette_change_requires_logout,
+                    Toast.LENGTH_LONG
+            ).show();
+            return;
+        }
+
         View view = inflate(this, R.layout.anisette_server_url_input_dialog, null);
 
         CircularProgressIndicatorSpec spec = new CircularProgressIndicatorSpec(view.getContext(), /* attrs= */ null, 0, com.google.android.material.R.style.Widget_Material3_CircularProgressIndicator_ExtraSmall);

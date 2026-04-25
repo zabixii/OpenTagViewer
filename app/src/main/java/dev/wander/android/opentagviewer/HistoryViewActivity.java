@@ -365,7 +365,9 @@ public class HistoryViewActivity extends AppCompatActivity implements IMapProvid
         final boolean isForToday = this.daysBack == 0;
 
         var reqData = Map.of(this.beaconId, this.beaconInformation.getOwnedBeaconPlistRaw());
-        var asyncReq = this.appleService.getReportsBetween(reqData, beginningOfDay, endOfDay);
+        // asyncReq emits Observable<FetchResult> (reports + updated accessory state per beacon)
+        var asyncReq = this.beaconRepo.toAccessoryRequests(reqData)
+                .flatMap(requests -> this.appleService.getReportsBetween(requests, beginningOfDay, endOfDay));
 
         final long now = System.currentTimeMillis();
         if (beginningOfDay < now - SEVEN_DAYS_IN_MS) {
@@ -378,7 +380,7 @@ public class HistoryViewActivity extends AppCompatActivity implements IMapProvid
             Log.d(TAG, "Going to perform a merged localdb + remote fetch for beaconId=" + beaconId + " location data in range: " + beginningOfDay + "-" + endOfDay);
             return Observable.zip(
                             // try to fetch remotely anyways and combine uniquely later
-                            asyncReq.flatMap(this.beaconRepo::storeToLocationCache).map(locations -> locations.get(beaconId)),
+                            asyncReq.flatMap(this.beaconRepo::storeFetchResult).map(locations -> locations.get(beaconId)),
                             // also try to fetch from DB for same time range
                             asyncDB,
                             (locationsRemote, locationsLocal) -> {
@@ -401,14 +403,14 @@ public class HistoryViewActivity extends AppCompatActivity implements IMapProvid
 
         Log.d(TAG, "Going to perform a fresh fetch for beaconId=" + beaconId + " location data in range: " + beginningOfDay + "-" + endOfDay);
         return asyncReq
-                .doOnNext(locations -> {
+                .doOnNext(fetchResult -> {
                     // Don't cache the current day (it could still update)!
                     if (!isForToday) {
-                        MEMORY_REPORTS_CACHE.put(cacheKey, locations.get(beaconId));
+                        MEMORY_REPORTS_CACHE.put(cacheKey, fetchResult.getReports().get(beaconId));
                     }
                 })
-                .flatMap(locations -> this.storeLocationFetchToLocalDb(isForToday, beaconId, beginningOfDay).andThen(Observable.just(locations)))
-                .flatMap(this.beaconRepo::storeToLocationCache)
+                .flatMap(fetchResult -> this.storeLocationFetchToLocalDb(isForToday, beaconId, beginningOfDay).andThen(Observable.just(fetchResult)))
+                .flatMap(this.beaconRepo::storeFetchResult)
                 .map(locations -> locations.get(beaconId))
                 .subscribeOn(Schedulers.computation());
     }

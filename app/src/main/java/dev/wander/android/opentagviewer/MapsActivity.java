@@ -91,6 +91,7 @@ import dev.wander.android.opentagviewer.db.repo.BeaconRepository;
 import dev.wander.android.opentagviewer.db.repo.model.ImportData;
 import dev.wander.android.opentagviewer.db.util.BeaconCombinerUtil;
 import dev.wander.android.opentagviewer.python.PythonAppleService;
+import dev.wander.android.opentagviewer.python.PythonAccountLoginException;
 import dev.wander.android.opentagviewer.python.PythonAuthService;
 import dev.wander.android.opentagviewer.db.repo.UserDataRepository;
 import dev.wander.android.opentagviewer.ui.maps.TagCardHelper;
@@ -803,11 +804,10 @@ public class MapsActivity extends AppCompatActivity implements IMapProvider.OnMa
             this.sendToLogin();
             return;
         }
-        // else stay here & restore the account & get the user settings
-        var userSettings = userSettingsRepo.getUserSettings();
-
-        // Get Apple account
-        var asyncAppleService = PythonAuthService.restoreAccount(userAuth.get(), userSettings.getAnisetteServerUrl())
+        // else stay here & restore the account.
+        // Note: FindMy 0.9.x embeds the anisette URL in the account JSON itself,
+        // so we no longer need to read userSettings.getAnisetteServerUrl() here.
+        var asyncAppleService = PythonAuthService.restoreAccount(userAuth.get())
             .map(appleAccount -> {
                 this.appleService = PythonAppleService.setup(appleAccount);
                 return this.appleService;
@@ -857,9 +857,39 @@ public class MapsActivity extends AppCompatActivity implements IMapProvider.OnMa
             this.initialFetchComplete = true;
             Log.e(TAG, "Error while restoring account and trying to get latest beacons", error);
             TagCardHelper.toggleRefreshLoadingAll(this.dynamicCardsForTag, false);
+
+            if (isAccountRestoreFailure(error)) {
+                // Most likely cause: a session blob saved by FindMy 0.7.6 that 0.9.x cannot
+                // restore. Wipe the bad blob and route the user back to login with a hint.
+                Log.w(TAG, "Account restore failed; clearing saved auth and prompting re-login");
+                handleAccountRestoreFailureOnUiThread();
+            }
             //Toast.makeText(this.getApplicationContext(), "Error while trying to fetch data for beacons", LENGTH_SHORT).show();
             // this error just happens every now and then. It's no big deal, we will retry automatically eventually...
         });
+    }
+
+    private static boolean isAccountRestoreFailure(Throwable t) {
+        for (Throwable cur = t; cur != null; cur = cur.getCause()) {
+            if (cur instanceof PythonAccountLoginException) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void handleAccountRestoreFailureOnUiThread() {
+        var disposable = this.userAuthRepo.clearUser()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> {
+                    Toast.makeText(this, R.string.relogin_required_after_upgrade, LENGTH_LONG).show();
+                    this.finish();
+                    this.sendToLogin();
+                }, err -> {
+                    Log.e(TAG, "Failed to clear stale auth blob during restore-failure recovery", err);
+                    // Fall through silently — at worst the user has to log out manually.
+                });
     }
 
     private synchronized void addBeaconToCurrent(final List<BeaconInformation> newBeaconInformation) {
@@ -1205,21 +1235,24 @@ public class MapsActivity extends AppCompatActivity implements IMapProvider.OnMa
         );
 
         Log.d(TAG, "Preparing to fetch location reports for the last " + hoursToGoBack + " hours!");
-        return this.appleService.getLastReports(beaconIdToPlist, hoursToGoBack)
+        return this.beaconRepo.toAccessoryRequests(beaconIdToPlist)
+                .flatMap(requests -> this.appleService.getLastReports(requests, hoursToGoBack))
                 .doOnNext(reports -> this.last24HHistoryFetchAt = now) // on success, update this time.
-                .flatMap(this.beaconRepo::storeToLocationCache);
+                .flatMap(this.beaconRepo::storeFetchResult);
     }
 
     private Observable<Map<String, List<BeaconLocationReport>>> fetchLastReports(final Map<String, String> beaconIdToPlist, final int hoursToGoBack) {
         Log.d(TAG, "Preparing to fetch location reports for the last " + hoursToGoBack + " hours!");
-        return this.appleService.getLastReports(beaconIdToPlist, hoursToGoBack)
-                .flatMap(this.beaconRepo::storeToLocationCache);
+        return this.beaconRepo.toAccessoryRequests(beaconIdToPlist)
+                .flatMap(requests -> this.appleService.getLastReports(requests, hoursToGoBack))
+                .flatMap(this.beaconRepo::storeFetchResult);
     }
 
     private Observable<Map<String, List<BeaconLocationReport>>> fetchLastReportsFor(final String beaconId, final String pList, final int hoursToGoBack) {
         Log.i(TAG, "Preparing to fetch location reports for the last " + hoursToGoBack + " hours!");
-        return this.appleService.getLastReports(Map.of(beaconId, pList), hoursToGoBack)
-                .flatMap(this.beaconRepo::storeToLocationCache);
+        return this.beaconRepo.toAccessoryRequests(Map.of(beaconId, pList))
+                .flatMap(requests -> this.appleService.getLastReports(requests, hoursToGoBack))
+                .flatMap(this.beaconRepo::storeFetchResult);
     }
 
     private boolean isAppleServiceInitialised() {
