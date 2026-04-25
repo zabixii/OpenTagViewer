@@ -137,6 +137,7 @@ public class AppleLoginActivity extends AppCompatActivity {
         this.sharedMainSettingsManager = new SharedMainSettingsManager(
                 this,
                 this::updateLocale,
+                this::updateMapProvider,
                 this::testAndSaveAnisetteUrl,
                 github,
                 this.getUserSettings(),
@@ -164,6 +165,7 @@ public class AppleLoginActivity extends AppCompatActivity {
         this.setupProgressBars();
         this.sharedMainSettingsManager.setupProgressBars();
         this.sharedMainSettingsManager.setupLanguageSwitchField();
+        this.sharedMainSettingsManager.setupMapProviderField();
         this.sharedMainSettingsManager.setupAnisetteServerUrlField();
         this.twoFactorEntryManager.init();
 
@@ -700,6 +702,12 @@ public class AppleLoginActivity extends AppCompatActivity {
         AppCompatDelegate.setApplicationLocales(appLocale);
 
         Log.i(TAG, "Updating app settings language");
+    }
+
+    private void updateMapProvider(final String newProvider) {
+        this.getUserSettings().setMapProvider(newProvider);
+        this.saveSettings();
+        Log.i(TAG, "Updating app settings map provider to " + newProvider);
     }
 
     private void saveSettings()  {

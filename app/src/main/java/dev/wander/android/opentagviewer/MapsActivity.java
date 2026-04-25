@@ -42,15 +42,9 @@ import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 
 import dev.wander.android.opentagviewer.ui.maps.IMapProvider;
 import dev.wander.android.opentagviewer.ui.maps.MapProviderFactory;
@@ -191,6 +185,10 @@ public class MapsActivity extends AppCompatActivity implements IMapProvider.OnMa
                     Intent data = result.getData();
                     if (data != null && data.getBooleanExtra("requestSendToLogin", false)) {
                         this.handleSendToLogin();
+                        return;
+                    }
+                    if (data != null && data.getBooleanExtra("mapProviderChanged", false)) {
+                        this.recreate();
                     }
                 }
             }
@@ -324,12 +322,7 @@ public class MapsActivity extends AppCompatActivity implements IMapProvider.OnMa
         mapProvider.setCompassEnabled(false); // not needed due to no rotation being allowed
         mapProvider.setMapToolbarEnabled(false); // we have a custom button for this
 
-        if (this.userSettings.hasDarkThemeEnabled()) {
-            // DARK THEME map
-            mapProvider.setMapStyle(true);
-        } else {
-            mapProvider.setMapStyle(false);
-        }
+        mapProvider.setMapStyle(this.getPreferredMapStyle());
 
         this.enableMyLocation(false);
 
@@ -375,6 +368,11 @@ public class MapsActivity extends AppCompatActivity implements IMapProvider.OnMa
     @Override
     protected void onResume() {
         super.onResume();
+
+        this.userSettings = this.userSettingsRepo.getUserSettings();
+        if (this.mapProvider != null) {
+            this.mapProvider.setMapStyle(this.getPreferredMapStyle());
+        }
 
          // TODO: when a user changes their anisette URL in settings and returns here, this should be able to deal with querying the new URL
 
@@ -1202,6 +1200,15 @@ public class MapsActivity extends AppCompatActivity implements IMapProvider.OnMa
     private void sendToLogin() {
         Intent intent = new Intent(this, AppleLoginActivity.class);
         startActivity(intent);
+    }
+
+    private IMapProvider.MapStyle getPreferredMapStyle() {
+        if (this.userSettings == null || this.userSettings.getUseDarkTheme() == null) {
+            return IMapProvider.MapStyle.FOLLOW_SYSTEM;
+        }
+        return this.userSettings.getUseDarkTheme()
+                ? IMapProvider.MapStyle.DARK
+                : IMapProvider.MapStyle.LIGHT;
     }
 
     private void fetchAndUpdateCurrentBeacons() {

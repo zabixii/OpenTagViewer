@@ -222,12 +222,7 @@ public class HistoryViewActivity extends AppCompatActivity implements IMapProvid
             this.map = ((GoogleMapProvider) provider).getGoogleMap();
         }
 
-        if (this.userSettings.hasDarkThemeEnabled()) {
-            // DARK THEME map
-            mapProvider.setMapStyle(true);
-        } else {
-            mapProvider.setMapStyle(false);
-        }
+        mapProvider.setMapStyle(this.getPreferredMapStyle());
 
         // move to same position that we left when we went to the history page from the main page
         this.mapProvider.moveCamera(this.defaultLatitude, this.defaultLongitude, this.defaultZoom);
@@ -238,6 +233,10 @@ public class HistoryViewActivity extends AppCompatActivity implements IMapProvid
     @Override
     protected void onResume() {
         super.onResume();
+        this.userSettings = this.userSettingsRepo.getUserSettings();
+        if (this.mapProvider != null) {
+            this.mapProvider.setMapStyle(this.getPreferredMapStyle());
+        }
         if (this.mapProvider instanceof AMapProvider) {
             ((AMapProvider) this.mapProvider).onResume();
         }
@@ -257,6 +256,15 @@ public class HistoryViewActivity extends AppCompatActivity implements IMapProvid
         if (this.mapProvider instanceof AMapProvider) {
             ((AMapProvider) this.mapProvider).onDestroy();
         }
+    }
+
+    private IMapProvider.MapStyle getPreferredMapStyle() {
+        if (this.userSettings == null || this.userSettings.getUseDarkTheme() == null) {
+            return IMapProvider.MapStyle.FOLLOW_SYSTEM;
+        }
+        return this.userSettings.getUseDarkTheme()
+                ? IMapProvider.MapStyle.DARK
+                : IMapProvider.MapStyle.LIGHT;
     }
 
     private void fetchAndUpdateDataForCurrentDay() {
