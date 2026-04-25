@@ -185,6 +185,10 @@ public class AppleLoginActivity extends AppCompatActivity {
     }
 
     private void testAndSaveAnisetteUrl(final String newUrl) {
+        this.testAndSaveAnisetteUrl(newUrl, null);
+    }
+
+    private void testAndSaveAnisetteUrl(final String newUrl, final Runnable onSuccess) {
         this.sharedMainSettingsManager.showAnisetteTestStatus(SharedMainSettingsManager.ANISETTE_TEST_STATUS.IN_FLIGHT);
 
         // verify that the server is live right now!
@@ -200,6 +204,9 @@ public class AppleLoginActivity extends AppCompatActivity {
                         this.binding.setAllowServerConfNext(true);
                         this.sharedMainSettingsManager.showAnisetteTestStatus(OK);
                         this.sharedMainSettingsManager.setAnisetteTextFieldError(null);
+                        if (onSuccess != null) {
+                            onSuccess.run();
+                        }
                     }, error -> {
                         Log.d(TAG, "Got error response from anisette server @ " + newUrl, error);
 
@@ -244,9 +251,9 @@ public class AppleLoginActivity extends AppCompatActivity {
     }
 
     private void onAnisetteUrlInputTyped(Boolean isValid) {
-        // typing overrides until explicitly validated by pressing the "confirm"
-        // checkmark to test the server
-        this.binding.setAllowServerConfNext(false);
+        // Let the user proceed after typing a syntactically valid URL.
+        // The actual connectivity test happens when the user continues.
+        this.binding.setAllowServerConfNext(isValid);
     }
 
     private void handleAuth(LoginActivityState state) {
@@ -276,11 +283,21 @@ public class AppleLoginActivity extends AppCompatActivity {
 
     public void onClickToLoginAccount(View view) {
         Log.d(TAG, "Clicked onwards to account login!");
-        // TODO: make a nice transition
-        if (this.binding.getAllowServerConfNext()) {
+        MaterialAutoCompleteTextView urlTextInput = findViewById(R.id.anisetteServerUrl);
+        final String currentInput = Optional.ofNullable(urlTextInput.getText())
+                .map(CharSequence::toString)
+                .map(String::trim)
+                .orElse("");
+
+        if (!this.sharedMainSettingsManager.validateAnisetteUrl(currentInput)) {
+            this.binding.setAllowServerConfNext(false);
+            return;
+        }
+
+        this.testAndSaveAnisetteUrl(currentInput, () -> {
             this.getUiState().setCurrentPage(PAGE.LOGIN);
             this.showAccountLoginAuthOptions();
-        }
+        });
     }
 
     public void onClickBackToAnisetteSettings(View view) {
