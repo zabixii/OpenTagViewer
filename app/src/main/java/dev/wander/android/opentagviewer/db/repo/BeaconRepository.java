@@ -2,8 +2,6 @@ package dev.wander.android.opentagviewer.db.repo;
 
 import android.util.Log;
 
-import com.chaquo.python.Python;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -125,60 +123,28 @@ public class BeaconRepository {
     }
 
     /**
-     * Build the FindMy 0.9.x fetch input for the given beacons. For each beacon we use
-     * the persisted {@code accessory_json} if present, otherwise lazily backfill it
-     * from the legacy XML plist via {@code main.py:convertPlistToJson} (and persist
-     * the result so the next call is cheap).
+     * Build the FindMy 0.9.x fetch input for the given beacons.
      *
-     * Beacons whose plist cannot be converted are dropped — passing them to Python
-     * would just throw inside FindMyAccessory.from_json. The caller will see a
-     * shorter fetch result than it asked for, which is preferable to taking down
-     * the whole batch.
-     *
-     * @param beaconIdToPlistFallback beacon ID → legacy XML plist (used only when the
-     *                                row's accessory_json is still NULL, e.g. for rows
-     *                                imported under FindMy 0.7.6).
+     * Only the persisted {@code accessory_json} column is used. Rows without it are
+     * skipped so the caller can continue with the remaining beacons.
      */
-    public Observable<List<AccessoryRequest>> toAccessoryRequests(Map<String, String> beaconIdToPlistFallback) {
+    public Observable<List<AccessoryRequest>> toAccessoryRequests(Map<String, String> beaconIds) {
         return Observable.fromCallable(() -> {
-            if (beaconIdToPlistFallback.isEmpty()) {
+            if (beaconIds.isEmpty()) {
                 return java.util.Collections.<AccessoryRequest>emptyList();
             }
 
             final var dao = db.ownedBeaconDao();
-            final var py = Python.getInstance();
-            final var module = py.getModule("main");
 
-            List<AccessoryRequest> out = new ArrayList<>(beaconIdToPlistFallback.size());
-            for (var entry : beaconIdToPlistFallback.entrySet()) {
-                final String beaconId = entry.getKey();
-                final String plistFallback = entry.getValue();
-
-                String accessoryJson = null;
+            List<AccessoryRequest> out = new ArrayList<>(beaconIds.size());
+            for (String beaconId : beaconIds.keySet()) {
                 final OwnedBeacon row = dao.getById(beaconId);
-                if (row != null) {
-                    accessoryJson = row.accessoryJson;
-                }
-
-                if (accessoryJson == null) {
-                    // Lazy backfill: rows imported under FindMy 0.7.6 won't have accessory_json.
-                    try {
-                        var converted = module.callAttr("convertPlistToJson", plistFallback);
-                        if (converted != null) {
-                            accessoryJson = converted.toString();
-                            dao.updateAccessoryJson(beaconId, accessoryJson);
-                            Log.d(TAG, "Lazy-backfilled accessory_json for beaconId=" + beaconId);
-                        }
-                    } catch (Exception e) {
-                        Log.w(TAG, "convertPlistToJson failed for beaconId=" + beaconId
-                                + "; this beacon will be skipped this fetch", e);
-                    }
-                }
+                final String accessoryJson = row == null ? null : row.accessoryJson;
 
                 if (accessoryJson != null) {
                     out.add(new AccessoryRequest(beaconId, accessoryJson));
                 } else {
-                    Log.w(TAG, "Skipping beaconId=" + beaconId + " — no accessory_json available");
+                    Log.w(TAG, "Skipping beaconId=" + beaconId + " - no accessory_json available");
                 }
             }
             return out;
@@ -189,7 +155,7 @@ public class BeaconRepository {
      * Persist a {@link FetchResult} from {@code PythonAppleService}: location reports
      * go to the cache (delegating to {@link #storeToLocationCache}), and the freshly
      * serialized {@code accessory_json} per beacon (which now carries the rolling-key
-     * alignment from FindMy 0.9.x — the issue #30 fix) is written back to the
+     * alignment from FindMy 0.9.x - the issue #30 fix) is written back to the
      * {@code OwnedBeacons} table.
      */
     public Observable<Map<String, List<BeaconLocationReport>>> storeFetchResult(FetchResult fetchResult) {

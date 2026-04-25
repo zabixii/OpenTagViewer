@@ -35,7 +35,7 @@ public class OwnedBeacon {
     public Long importId;
 
     /**
-     * Content is XML
+     * Content is XML.
      */
     @ColumnInfo(name = "content")
     public String content;
@@ -47,12 +47,7 @@ public class OwnedBeacon {
     public boolean isRemoved;
 
     /**
-     * Serialized FindMyAccessory state (JSON) for FindMy.py 0.9.x. Includes the
-     * rolling-key alignment that updates after every fetch — persisting it back
-     * across calls is what fixes the key-drift bug from issue #30.
-     *
-     * Nullable for rows imported under FindMy 0.7.6: lazily backfilled from
-     * {@link #content} on first fetch via {@code main.py:convertPlistToJson}.
+     * Serialized FindMyAccessory state (JSON) for FindMy.py 0.9.x.
      */
     @ColumnInfo(name = "accessory_json")
     public String accessoryJson;

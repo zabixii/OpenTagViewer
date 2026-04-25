@@ -131,8 +131,6 @@ public final class PythonAuthService {
             var py = Python.getInstance();
             var module = py.getModule(MODULE_MAIN);
 
-            // FindMy 0.9.x embeds the anisette provider state inside the account JSON
-            // (see AccountStateMapping.anisette), so we no longer pass a server URL here.
             var returned = module.callAttr(
                     "getAccount",
                     new Kwarg("serializedAccountData", new String(account, StandardCharsets.UTF_8))
