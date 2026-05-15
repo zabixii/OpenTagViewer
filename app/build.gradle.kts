@@ -30,11 +30,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        val maptilerKey = (project.findProperty("MAPTILER_API_KEY") ?: System.getenv("MAPTILER_API_KEY") ?: "").toString()
-        buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
-        val maptilerKey = (project.findProperty("MAPTILER_API_KEY") ?: System.getenv("MAPTILER_API_KEY") ?: "").toString()
-        buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
-        val maptilerKey = System.getenv("MAPTILER_API_KEY") ?: project.findProperty("MAPTILER_API_KEY")?.toString() ?: ""
+        val maptilerKey = (System.getenv("MAPTILER_API_KEY") ?: project.findProperty("MAPTILER_API_KEY") ?: "").toString()
         buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
         applicationId = "dev.wander.android.opentagviewer"
         minSdk = 24
@@ -78,11 +74,8 @@ android {
     }
     buildFeatures {
         buildConfig = true
-        buildConfig = true
-        buildConfig = true
         viewBinding = true
         dataBinding = true
-        buildConfig = true
     }
 
     androidResources {
@@ -96,11 +89,7 @@ lombok {
 
 chaquopy {
     defaultConfig {
-        val maptilerKey = (project.findProperty("MAPTILER_API_KEY") ?: System.getenv("MAPTILER_API_KEY") ?: "").toString()
-        buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
-        val maptilerKey = (project.findProperty("MAPTILER_API_KEY") ?: System.getenv("MAPTILER_API_KEY") ?: "").toString()
-        buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
-        val maptilerKey = System.getenv("MAPTILER_API_KEY") ?: project.findProperty("MAPTILER_API_KEY")?.toString() ?: ""
+        val maptilerKey = (System.getenv("MAPTILER_API_KEY") ?: project.findProperty("MAPTILER_API_KEY") ?: "").toString()
         buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
         version = "3.12"
         pip {
