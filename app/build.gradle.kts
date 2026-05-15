@@ -30,6 +30,8 @@ android {
     compileSdk = 35
 
     defaultConfig {
+        val maptilerKey = System.getenv("MAPTILER_API_KEY") ?: project.findProperty("MAPTILER_API_KEY")?.toString() ?: ""
+        buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
         applicationId = "dev.wander.android.opentagviewer"
         minSdk = 24
         targetSdk = 35
@@ -71,6 +73,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
+        buildConfig = true
         viewBinding = true
         dataBinding = true
         buildConfig = true
@@ -87,6 +90,8 @@ lombok {
 
 chaquopy {
     defaultConfig {
+        val maptilerKey = System.getenv("MAPTILER_API_KEY") ?: project.findProperty("MAPTILER_API_KEY")?.toString() ?: ""
+        buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
         version = "3.12"
         pip {
             // SEE: https://chaquo.com/chaquopy/doc/current/android.html#android-requirements
@@ -102,6 +107,7 @@ chaquopy {
 }
 
 dependencies {
+    implementation("org.maplibre.gl:android-sdk:11.5.1")
 
     implementation(libs.preference)
     implementation(libs.activity)

@@ -1,3 +1,4 @@
+import dev.wander.android.opentagviewer.ui.maps.MapTilerProvider;
 package dev.wander.android.opentagviewer.ui.maps;
 
 import android.app.Activity;
@@ -21,13 +22,13 @@ public class MapProviderFactory {
     public static IMapProvider create(String providerType) {
         if (providerType == null || providerType.isEmpty() || PROVIDER_GOOGLE.equals(providerType)) {
             Log.d(TAG, "Creating Google Maps provider");
-            return new GoogleMapProvider();
+            return new MapTilerProvider();
         } else if (PROVIDER_AMAP.equals(providerType)) {
             Log.d(TAG, "Creating AMap provider");
             return new AMapProvider();
         } else {
             Log.w(TAG, "Unknown provider type: " + providerType + ", defaulting to Google Maps");
-            return new GoogleMapProvider();
+            return new MapTilerProvider();
         }
     }
 }

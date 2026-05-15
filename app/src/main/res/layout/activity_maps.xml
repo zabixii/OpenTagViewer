@@ -75,7 +75,7 @@
         android:layout_above="@id/tags_scrollable_area"
         android:layout_alignParentRight="true"
         android:layout_marginRight="10dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="110dp"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:orientation="horizontal"

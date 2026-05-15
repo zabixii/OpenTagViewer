@@ -1,0 +1,158 @@
+--- Project Structure ---
+.
+./app
+./app/build.gradle.kts
+./app/libs
+./app/libs/unicorn-2.1.1-py3-none-any.whl
+./app/proguard-rules.pro
+./app/src
+./app/src/androidTest
+./app/src/main
+./app/src/test
+./assets
+./assets/open_tag_viewer.psd
+./assets/open_tag_viewer2.png
+./assets/open_tag_viewer2.psd
+./assets/open_tag_viewer2.sai
+./assets/opentagviewer.ai
+./assets/opentagviewer.png
+./assets/opentagviewer.psd
+./assets/opentagviewer.svg
+./assets/opentagviewer_banner.ai
+./assets/opentagviewer_banner.png
+./assets/opentagviewer_banner_github.ai
+./assets/opentagviewer_banner_github.png
+./assets/opentagviewer_banner_github_sm.png
+./assets/opentagviewer_icon.ai
+./assets/opentagviewer_icon.svg
+./assets/opentagviewer_macos.ai
+./assets/opentagviewer_macos.png
+./assets/opentagviewer_macos_exporter.png
+./build.gradle.kts
+./CLAUDE.md
+./dark_mode_preview.jpg
+./gradle.properties
+./gradle
+./gradle/libs.versions.toml
+./gradle/wrapper
+./gradle/wrapper/gradle-wrapper.jar
+./gradle/wrapper/gradle-wrapper.properties
+./gradlew
+./gradlew.bat
+./LICENSE.TXT
+./light_mode_preview.jpg
+./local.defaults.properties
+./opentagviewer_icon.png
+./opentagviewer_icon_m.png
+./opentagviewer_icon_s.png
+./opentagviewer_icon_xs.png
+./python
+./python/assets
+./python/assets/app_preview.png
+./python/assets/opentagviewer_macos.png
+./python/main
+./python/main/__init__.py
+./python/main/airtag_decryptor.py
+./python/main/utils.py
+./python/main/wizard.py
+./python/make_icon.sh
+./python/OpenTagViewer.icns
+./python/OpenTagViewer.iconset
+./python/OpenTagViewer.iconset/icon_128x128.png
+./python/OpenTagViewer.iconset/icon_128x128@2x.png
+./python/OpenTagViewer.iconset/icon_16x16.png
+./python/OpenTagViewer.iconset/icon_16x16@2x.png
+./python/OpenTagViewer.iconset/icon_256x256.png
+./python/OpenTagViewer.iconset/icon_256x256@2x.png
+./python/OpenTagViewer.iconset/icon_32x32.png
+./python/OpenTagViewer.iconset/icon_32x32@2x.png
+./python/OpenTagViewer.iconset/icon_512x512.png
+./python/OpenTagViewer.iconset/icon_512x512@2x.png
+./python/OpenTagViewer.spec
+./python/README.md
+./python/requirements.txt
+./python/test
+./python/test/__init__.py
+./python/test/resources
+./python/test/test_airtag_decryptor.py
+./python/test/unittestutils.py
+./README.md
+./scripts
+./scripts/rebuild_unicorn_stub_wheel.py
+./scripts/validate_stub_wheels.py
+./settings.gradle.kts
+./project_info.txt
+
+--- Layout File Content (fragment_map.xml) ---
+fragment_map.xml not found. Searching for main layouts...
+app/src/main/res/layout/activity_apple_login.xml
+app/src/main/res/layout/activity_device_info.xml
+app/src/main/res/layout/activity_history_view.xml
+app/src/main/res/layout/activity_information.xml
+app/src/main/res/layout/activity_maps.xml
+app/src/main/res/layout/activity_my_devices_list.xml
+app/src/main/res/layout/activity_settings.xml
+app/src/main/res/layout/anisette_server_url_input.xml
+app/src/main/res/layout/anisette_server_url_input_dialog.xml
+app/src/main/res/layout/apple_login_sms_button.xml
+app/src/main/res/layout/edit_device_name_dialog.xml
+app/src/main/res/layout/history_list_item.xml
+app/src/main/res/layout/inline_top_toolbar.xml
+app/src/main/res/layout/inline_top_toolbar_with_button.xml
+app/src/main/res/layout/language_input.xml
+app/src/main/res/layout/language_input_dialog.xml
+app/src/main/res/layout/login_information_settings.xml
+app/src/main/res/layout/main_app_settings.xml
+app/src/main/res/layout/map_provider_input.xml
+app/src/main/res/layout/maps_tag_card.xml
+app/src/main/res/layout/my_device_list_item.xml
+app/src/main/res/layout/settings_item_clickable.xml
+app/src/main/res/layout/settings_item_noicon_clickable.xml
+app/src/main/res/layout/view_history_bottom_sheet.xml
+
+--- Potential UI Targets ---
+app/src/main/res/layout/activity_apple_login.xml:                    <Button
+app/src/main/res/layout/activity_apple_login.xml:                        style="?attr/materialIconButtonOutlinedStyle"
+app/src/main/res/layout/activity_apple_login.xml:                    <Button
+app/src/main/res/layout/activity_apple_login.xml:                        android:id="@+id/iconButton2"
+app/src/main/res/layout/activity_apple_login.xml:                        style="?attr/materialIconButtonOutlinedStyle"
+app/src/main/res/layout/activity_apple_login.xml:                        <Button
+app/src/main/res/layout/activity_apple_login.xml:                            style="@style/Widget.Material3.Button"
+app/src/main/res/layout/activity_apple_login.xml:                            android:onClick="onClickLoginButton"
+app/src/main/res/layout/activity_apple_login.xml:                    <Button
+app/src/main/res/layout/activity_apple_login.xml:                        style="@style/Widget.Material3.Button.OutlinedButton"
+app/src/main/res/layout/activity_apple_login.xml:                    <Button
+app/src/main/res/layout/activity_apple_login.xml:                        style="?attr/materialIconButtonOutlinedStyle"
+app/src/main/res/layout/activity_apple_login.xml:                    <Button
+app/src/main/res/layout/activity_apple_login.xml:                        style="?attr/materialIconButtonOutlinedStyle"
+app/src/main/res/layout/activity_device_info.xml:                        <Button
+app/src/main/res/layout/activity_device_info.xml:                            style="?attr/materialIconButtonStyle"
+app/src/main/res/layout/activity_information.xml:        style="?android:attr/borderlessButtonStyle"
+app/src/main/res/layout/activity_information.xml:                <Button
+app/src/main/res/layout/activity_information.xml:                    style="@style/Widget.Material3.Button"
+app/src/main/res/layout/activity_information.xml:                <Button
+app/src/main/res/layout/activity_information.xml:                    style="@style/Widget.Material3.Button"
+app/src/main/res/layout/activity_information.xml:                <Button
+app/src/main/res/layout/activity_information.xml:                    style="@style/Widget.Material3.Button"
+app/src/main/res/layout/activity_maps.xml:        <ImageButton
+app/src/main/res/layout/activity_maps.xml:        <ImageButton
+app/src/main/res/layout/activity_maps.xml:        <ImageButton
+app/src/main/res/layout/anisette_server_url_input_dialog.xml:        <com.google.android.material.button.MaterialButton
+app/src/main/res/layout/anisette_server_url_input_dialog.xml:            style="@style/Widget.Material3.Button.TextButton.Icon"
+app/src/main/res/layout/anisette_server_url_input_dialog.xml:        <com.google.android.material.button.MaterialButton
+app/src/main/res/layout/anisette_server_url_input_dialog.xml:            style="@style/Widget.Material3.Button.TextButton.Icon"
+app/src/main/res/layout/apple_login_sms_button.xml:    <Button
+app/src/main/res/layout/apple_login_sms_button.xml:        style="@style/Widget.Material3.Button.OutlinedButton"
+app/src/main/res/layout/inline_top_toolbar.xml:            <ImageButton
+app/src/main/res/layout/inline_top_toolbar_with_button.xml:            <ImageButton
+app/src/main/res/layout/inline_top_toolbar_with_button.xml:            <ImageButton
+app/src/main/res/layout/login_information_settings.xml:            <Button
+app/src/main/res/layout/login_information_settings.xml:                style="@style/Widget.Material3.Button.TonalButton"
+app/src/main/res/layout/view_history_bottom_sheet.xml:            <Button
+app/src/main/res/layout/view_history_bottom_sheet.xml:                style="?attr/materialIconButtonStyle"
+app/src/main/res/layout/view_history_bottom_sheet.xml:                <Button
+app/src/main/res/layout/view_history_bottom_sheet.xml:                    style="?attr/materialIconButtonStyle"
+app/src/main/res/layout/view_history_bottom_sheet.xml:            <Button
+app/src/main/res/layout/view_history_bottom_sheet.xml:                style="?attr/materialIconButtonStyle"
+app/src/main/res/layout/view_history_bottom_sheet.xml:            <com.google.android.material.button.MaterialButton
+app/src/main/res/layout/view_history_bottom_sheet.xml:                style="@style/Widget.Material3.Button"
