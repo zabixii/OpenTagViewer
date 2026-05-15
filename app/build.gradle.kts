@@ -9,6 +9,10 @@ android {
     compileSdk = 35
 
     defaultConfig {
+        val maptilerKey = (System.getenv("MAPTILER_API_KEY") ?: project.findProperty("MAPTILER_API_KEY") ?: "").toString()
+        buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
+        val maptilerKey = (System.getenv("MAPTILER_API_KEY") ?: project.findProperty("MAPTILER_API_KEY") ?: "").toString()
+        buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
         applicationId = "dev.wander.android.opentagviewer"
         minSdk = 24
         targetSdk = 35
@@ -22,6 +26,8 @@ android {
     }
 
     buildFeatures {
+        buildConfig = true
+        buildConfig = true
         viewBinding = true
         dataBinding = true
         buildConfig = true
@@ -48,6 +54,8 @@ android {
 }
 
 dependencies {
+    implementation("org.maplibre.gl:android-sdk:11.5.1")
+    implementation("org.maplibre.gl:android-sdk:11.5.1")
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
