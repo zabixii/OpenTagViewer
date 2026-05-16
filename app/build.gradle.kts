@@ -18,6 +18,7 @@ secrets {
 }
 
 android {
+    buildFeatures { buildConfig = true }
     namespace = "dev.wander.android.opentagviewer"
     compileSdk = 35
 
@@ -65,7 +66,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
-        buildConfig = true
         viewBinding = true
         dataBinding = true
         buildConfig = true
