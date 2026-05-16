@@ -2,9 +2,9 @@ package dev.wander.android.opentagviewer.ui.maps;
 
 import android.os.Bundle;
 import android.view.View;
-import com.mapbox.mapboxsdk.Mapbox;
-import com.mapbox.mapboxsdk.maps.MapView;
-import com.mapbox.mapboxsdk.maps.Style;
+import org.maplibre.android.MapLibre;
+import org.maplibre.android.maps.MapView;
+import org.maplibre.android.maps.Style;
 import dev.wander.android.opentagviewer.R;
 
 public class MapTilerProvider implements IMapProvider {
@@ -12,9 +12,9 @@ public class MapTilerProvider implements IMapProvider {
 
     @Override
     public void onCreate(View rootView, Bundle savedInstanceState) {
-        // The GitHub Action will swap this placeholder with your real secret
         String key = "MAPTILER_KEY_PLACEHOLDER";
-        Mapbox.getInstance(rootView.getContext());
+        // Updated from Mapbox.getInstance to MapLibre.getInstance
+        MapLibre.getInstance(rootView.getContext());
         
         mapView = rootView.findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
