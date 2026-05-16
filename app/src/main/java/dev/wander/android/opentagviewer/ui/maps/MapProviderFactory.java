@@ -1,4 +1,3 @@
-import dev.wander.android.opentagviewer.ui.maps.MapTilerProvider;
 package dev.wander.android.opentagviewer.ui.maps;
 
 import android.app.Activity;
