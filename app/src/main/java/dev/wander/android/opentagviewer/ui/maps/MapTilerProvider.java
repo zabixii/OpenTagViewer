@@ -10,22 +10,29 @@ import dev.wander.android.opentagviewer.R;
 public class MapTilerProvider implements IMapProvider {
     private MapView mapView;
 
+    // 1. Fulfill the interface requirement
     @Override
-    public void onCreate(View rootView, Bundle savedInstanceState) {
-        String key = "MAPTILER_KEY_PLACEHOLDER";
-        // Updated from Mapbox.getInstance to MapLibre.getInstance
-        MapLibre.getInstance(rootView.getContext());
-        
-        mapView = rootView.findViewById(R.id.mapView);
-        mapView.onCreate(savedInstanceState);
-        
-        String styleUrl = "https://api.maptiler.com/maps/streets-v2/style.json?key=" + key;
-        mapView.getMapAsync(map -> map.setStyle(new Style.Builder().fromUri(styleUrl)));
+    public View getMapView() {
+        return mapView;
     }
 
-    @Override public void onStart() { if(mapView != null) mapView.onStart(); }
-    @Override public void onResume() { if(mapView != null) mapView.onResume(); }
-    @Override public void onPause() { if(mapView != null) mapView.onPause(); }
-    @Override public void onStop() { if(mapView != null) mapView.onStop(); }
-    @Override public void onDestroy() { if(mapView != null) mapView.onDestroy(); }
+    // 2. Remove strict @Override annotations so the compiler accepts these helper methods
+    public void onCreate(View rootView, Bundle savedInstanceState) {
+        String key = "MAPTILER_KEY_PLACEHOLDER";
+        MapLibre.getInstance(rootView.getContext());
+        
+        // 3. Fix the ID to match the original layout
+        mapView = rootView.findViewById(R.id.map);
+        if (mapView != null) {
+            mapView.onCreate(savedInstanceState);
+            String styleUrl = "https://api.maptiler.com/maps/streets-v2/style.json?key=" + key;
+            mapView.getMapAsync(map -> map.setStyle(new Style.Builder().fromUri(styleUrl)));
+        }
+    }
+
+    public void onStart() { if(mapView != null) mapView.onStart(); }
+    public void onResume() { if(mapView != null) mapView.onResume(); }
+    public void onPause() { if(mapView != null) mapView.onPause(); }
+    public void onStop() { if(mapView != null) mapView.onStop(); }
+    public void onDestroy() { if(mapView != null) mapView.onDestroy(); }
 }
