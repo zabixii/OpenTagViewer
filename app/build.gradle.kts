@@ -18,13 +18,10 @@ secrets {
 }
 
 android {
-    buildFeatures { buildConfig = true }
     namespace = "dev.wander.android.opentagviewer"
     compileSdk = 35
 
     defaultConfig {
-        val maptilerKey = (System.getenv("MAPTILER_API_KEY") ?: project.findProperty("MAPTILER_API_KEY") ?: "").toString()
-        buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
         applicationId = "dev.wander.android.opentagviewer"
         minSdk = 24
         targetSdk = 35
@@ -82,8 +79,6 @@ lombok {
 
 chaquopy {
     defaultConfig {
-        val maptilerKey = (System.getenv("MAPTILER_API_KEY") ?: project.findProperty("MAPTILER_API_KEY") ?: "").toString()
-        buildConfigField("String", "MAPTILER_API_KEY", "\"$maptilerKey\"")
         version = "3.12"
         pip {
             // SEE: https://chaquo.com/chaquopy/doc/current/android.html#android-requirements

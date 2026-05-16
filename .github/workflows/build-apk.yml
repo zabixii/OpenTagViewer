@@ -14,15 +14,13 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Patch Project
-        run: chmod +x patch_project.sh && ./patch_project.sh
+      - name: Inject API Key into Java Code
+        run: sed -i "s/MAPTILER_KEY_PLACEHOLDER/${{ secrets.MAPTILER_API_KEY }}/g" app/src/main/java/dev/wander/android/opentagviewer/ui/maps/MapTilerProvider.java
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        env:
-          MAPTILER_API_KEY: ${{ secrets.MAPTILER_API_KEY }}
         run: ./gradlew assembleDebug
 
       - name: Upload APK
