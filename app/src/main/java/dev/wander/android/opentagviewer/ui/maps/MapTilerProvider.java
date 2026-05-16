@@ -15,15 +15,19 @@ public class MapTilerProvider implements IMapProvider {
         return mapView;
     }
 
-    // NEW: Fulfill the interface requirement for the clear() method
     @Override
     public void clear() {
         if (mapView != null) {
             mapView.getMapAsync(map -> {
-                // Safely clear map annotations if the interface requests it
                 map.clear();
             });
         }
+    }
+
+    // NEW: Fulfill the MapToolbar interface requirement (No-op for MapLibre)
+    @Override
+    public void setMapToolbarEnabled(boolean enabled) {
+        // MapLibre doesn't use the Google Maps toolbar, so we safely ignore this.
     }
 
     public void onCreate(View rootView, Bundle savedInstanceState) {
